@@ -63,8 +63,8 @@ class SignalHolder(object):
     def __eq__(self, other):
         if len(self) != len(other):
             return False
-        s1_has_s2 = all([sig in self.signals for sig in other.signals])
-        s2_has_s1 = all([sig in other.signals for sig in self.signals])
+        s1_has_s2 = all(sig in self.signals for sig in other.signals)
+        s2_has_s1 = all(sig in other.signals for sig in self.signals)
         return s1_has_s2 and s2_has_s1
 
     def __ne__(self, other):
@@ -76,17 +76,16 @@ class SignalHolder(object):
                 item, six.string_types):
             raise TypeError()
 
-        if isinstance(item, six.string_types):
-            # We are searching for either a tag or a slug
-            for signal in self.signals:
-                if signal.matches_slug(item):
-                    return True
-                if signal.matches_tag(item):
-                    return True
-            return False
-        else:
+        if not isinstance(item, six.string_types):
             # We are searching for a signal by its slug (unique ID)
             return item.slug in self.all_slugs
+        # We are searching for either a tag or a slug
+        for signal in self.signals:
+            if signal.matches_slug(item):
+                return True
+            if signal.matches_tag(item):
+                return True
+        return False
 
     def register(self, signals):
         """Add a signal/list of signals to the SignalHolder
@@ -107,7 +106,7 @@ class SignalHolder(object):
             self.signals.append(signals)
             self.all_slugs.append(signals.slug)
 
-        elif isinstance(signals, list) or isinstance(signals, SignalHolder):
+        elif isinstance(signals, (list, SignalHolder)):
             for signal in signals:
                 self.register(signal)
 
@@ -194,16 +193,16 @@ class SynSignal(object):
                  tags=None,
                  data=None,
                  check_name=None):
-        self.text = text if text else ""
-        self.slug = slug if slug else ""
-        self.check_name = check_name if check_name else ""
+        self.text = text or ""
+        self.slug = slug or ""
+        self.check_name = check_name or ""
 
         if self.__dict__.get("strength", None):
             self.strength = self.strength
         else:
             self.strength = strength
-        self.tags = tags if tags else []
-        self.data = data if data else {}
+        self.tags = tags or []
+        self.data = data or {}
 
     def __repr__(self):
         return self.slug
@@ -224,10 +223,7 @@ class SynSignal(object):
         :rtype: bool
         :returns: True if fuzzy match, else False
         """
-        for t in self.tags:
-            if tag in t:
-                return True
-        return False
+        return any(tag in t for t in self.tags)
 
     def matches_slug(self, slug):
         """Checks if a Signal has a given slug

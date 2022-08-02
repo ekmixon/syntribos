@@ -86,13 +86,7 @@ def _build_str_combinations(fuzz_string, data):
         start, stop = match.span()
         model = "{0}{1}{2}".format(data[:start], fuzz_string, data[stop:])
 
-        if match.group(1):
-            # The string is of the format "{identifier:value}", so we just
-            # want the identifier as the param_path
-            param = match.group(1)
-        else:
-            param = match.group(0)
-
+        param = match.group(1) or match.group(0)
         if param in _string_var_objs:
             var_obj = _string_var_objs[param]
             if not _check_var_obj_limits(var_obj, fuzz_string):
@@ -124,7 +118,7 @@ def _build_dict_combinations(fuzz_string, dic, skip_var):
                 }), "{0}/{1}".format(key, param_path))
         elif isinstance(val, list):
             for i, v in enumerate(val):
-                list_ = [_ for _ in val]
+                list_ = list(val)
                 if isinstance(v, dict):
                     for ret, param_path in _build_dict_combinations(
                             fuzz_string, v, skip_var):
@@ -163,20 +157,21 @@ def _merge_dictionaries(x, y):
 
 def _build_xml_combinations(stri, ele, skip_var):
     """Places fuzz string in fuzz location for XML data."""
-    if skip_var not in ele.tag:
-        if ele.text and skip_var not in ele.text:
-            yield _update_xml_ele_text(ele, stri), ele.tag
-        for attr, param_path in _build_dict_combinations(stri, ele.attrib,
-                                                         skip_var):
-            yield (_update_xml_ele_attribs(ele, attr),
+    if skip_var in ele.tag:
+        return
+    if ele.text and skip_var not in ele.text:
+        yield _update_xml_ele_text(ele, stri), ele.tag
+    for attr, param_path in _build_dict_combinations(stri, ele.attrib,
+                                                     skip_var):
+        yield (_update_xml_ele_attribs(ele, attr),
+               "{0}/{1}".format(ele.tag, param_path))
+    for i, element in enumerate(list(ele)):
+        for ret, param_path in _build_xml_combinations(stri, element,
+                                                       skip_var):
+            list_ = list(ele)
+            list_[i] = copy.copy(ret)
+            yield (_update_inner_xml_ele(ele, list_),
                    "{0}/{1}".format(ele.tag, param_path))
-        for i, element in enumerate(list(ele)):
-            for ret, param_path in _build_xml_combinations(stri, element,
-                                                           skip_var):
-                list_ = list(ele)
-                list_[i] = copy.copy(ret)
-                yield (_update_inner_xml_ele(ele, list_),
-                       "{0}/{1}".format(ele.tag, param_path))
 
 
 def _update_xml_ele_text(ele, text):
@@ -255,6 +250,4 @@ def _check_var_obj_limits(var_obj, fuzz_string):
 
     if len(fuzz_string) > var_obj.max_length:
         return False
-    if len(fuzz_string) < var_obj.min_length:
-        return False
-    return True
+    return len(fuzz_string) >= var_obj.min_length

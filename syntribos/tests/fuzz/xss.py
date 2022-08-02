@@ -30,10 +30,7 @@ class XSSBody(base_fuzz.BaseFuzzTestCase):
 
         if 'content-type' in self.init_req.headers:
             content_type = self.init_req.headers['content-type']
-            if 'html' in content_type:
-                sev = syntribos.MEDIUM
-            else:
-                sev = syntribos.LOW
+            sev = syntribos.MEDIUM if 'html' in content_type else syntribos.LOW
         else:
             sev = syntribos.LOW
         if "FAILURE_KEYS_PRESENT" in self.test_signals:

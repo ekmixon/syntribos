@@ -34,9 +34,8 @@ def get_fake_generator():
 def get_url(path):
     """Helper method to append endpoint and slash if necessary."""
     return "{endpoint}{sep}{path}".format(
-        endpoint=endpoint,
-        sep="/" if not path.startswith("/") else "",
-        path=path)
+        endpoint=endpoint, sep="" if path.startswith("/") else "/", path=path
+    )
 
 
 def create_default_req(*args, **kwargs):
@@ -87,7 +86,7 @@ class HTTPModelsUnittest(testtools.TestCase):
 
     def test_string_dat_invalid_dict(self):
         """Tests RHM._string_data() with an unserializable dict."""
-        _dict = {"a": set([1, 2, 3])}
+        _dict = {"a": {1, 2, 3}}
         self.assertRaises(TypeError, rhm._string_data, _dict)
 
     def test_string_dat_valid_xml(self):

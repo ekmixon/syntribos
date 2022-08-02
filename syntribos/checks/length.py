@@ -94,13 +94,13 @@ def max_body_length(test):
         "req_len": len(resp.request.body or ""),
         "resp_len": len(resp.content or ""),
     }
-    text = ("Length:\n"
-            "\tRequest length: {0}\n"
-            "\tResponse length: {1}\n".format(data["req_len"],
-                                              data["resp_len"]))
-    slug = "OVER_MAX_LENGTH"
-
     if data["resp_len"] > CONF.test.max_length:
+        text = ("Length:\n"
+                "\tRequest length: {0}\n"
+                "\tResponse length: {1}\n".format(data["req_len"],
+                                                  data["resp_len"]))
+        slug = "OVER_MAX_LENGTH"
+
         return syntribos.signal.SynSignal(
             text=text,
             slug=slug,

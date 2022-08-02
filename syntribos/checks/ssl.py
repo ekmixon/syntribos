@@ -24,10 +24,12 @@ def https_check(test):
     :returns: syntribos.signal.SynSignal
     """
     check_name = "HTTPS_CHECK"
-    if not test.init_signals.ran_check(check_name):
-        response_text = test.init_resp.text
-    else:
-        response_text = test.test_resp.text
+    response_text = (
+        test.test_resp.text
+        if test.init_signals.ran_check(check_name)
+        else test.init_resp.text
+    )
+
     target = test.init_req.url
     domain = urlparse(target).hostname
     regex = r"\bhttp://{0}".format(domain)

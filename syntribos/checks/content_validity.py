@@ -31,10 +31,11 @@ def valid_content(test):
     tags = []
     validity = "VALID"
 
-    if not test.init_signals.ran_check(check_name):
-        resp = test.init_resp
-    else:
-        resp = test.test_resp
+    resp = (
+        test.test_resp
+        if test.init_signals.ran_check(check_name)
+        else test.init_resp
+    )
 
     data = {"response_content": resp.content}
 

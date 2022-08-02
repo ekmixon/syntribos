@@ -26,17 +26,19 @@ def stacktrace(test):
     :returns: SynSignal
     """
     error_string = 'Traceback (most recent call last):'
-    strength = 1.0
-    tags = ["APPLICATION_FAIL"]
-    slug = "STACKTRACE_PRESENT"
     check_name = "STACKTRACE"
-    if not test.init_signals.ran_check(check_name):
-        resp = test.init_resp
-    else:
-        resp = test.test_resp
+    resp = (
+        test.test_resp
+        if test.init_signals.ran_check(check_name)
+        else test.init_resp
+    )
+
     if error_string in resp.text:
         text = ("Stacktrace detected: {0}\n".format(
             resp.text[resp.text.index(error_string):]))
+        strength = 1.0
+        tags = ["APPLICATION_FAIL"]
+        slug = "STACKTRACE_PRESENT"
         return syntribos.signal.SynSignal(text=text, tags=tags,
                                           slug=slug, strength=strength,
                                           check_name=check_name)

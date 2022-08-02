@@ -63,7 +63,7 @@ class ContentType(ExistingPathType):
                     else:
                         yield self._fetch_from_file(file_path)
                 except Exception:
-                    print("Skipped %s" % string)
+                    print(f"Skipped {string}")
 
     def _fetch_from_file(self, string, subdir=None):
         # Get the filename here

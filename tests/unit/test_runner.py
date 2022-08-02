@@ -33,13 +33,13 @@ class RunnerUnittest(testtools.TestCase):
 
     def test_get_LDAP_tests(self):
         """Check that we get the proper LDAP tests."""
-        expected = ["LDAP_INJECTION_" + x for x in self.common_endings]
+        expected = [f"LDAP_INJECTION_{x}" for x in self.common_endings]
         loaded_tests = self.r.get_tests(["LDAP"])
         self._compare_tests(expected, loaded_tests)
 
     def test_get_SQL_tests(self):
         """Check that we get the proper SQLi tests."""
-        expected = ["SQL_INJECTION_" + x for x in self.common_endings]
+        expected = [f"SQL_INJECTION_{x}" for x in self.common_endings]
         loaded_tests = self.r.get_tests(["SQL"])
         self._compare_tests(expected, loaded_tests)
 
@@ -51,27 +51,25 @@ class RunnerUnittest(testtools.TestCase):
 
     def test_get_int_overflow_tests(self):
         """Check that we get the proper integer overflow tests."""
-        expected = ["INTEGER_OVERFLOW_" + x for x in self.common_endings]
+        expected = [f"INTEGER_OVERFLOW_{x}" for x in self.common_endings]
         loaded_tests = self.r.get_tests(["INTEGER_OVERFLOW"])
         self._compare_tests(expected, loaded_tests)
 
     def test_get_buffer_overflow_tests(self):
         """Check that we get the proper buffer overflow tests."""
-        expected = ["BUFFER_OVERFLOW_" + x for x in self.common_endings]
+        expected = [f"BUFFER_OVERFLOW_{x}" for x in self.common_endings]
         loaded_tests = self.r.get_tests(["BUFFER_OVERFLOW"])
         self._compare_tests(expected, loaded_tests)
 
     def test_get_command_injection_tests(self):
         """Check that we get the proper command injection tests."""
-        expected = ["COMMAND_INJECTION_" + x for x in self.common_endings]
+        expected = [f"COMMAND_INJECTION_{x}" for x in self.common_endings]
         loaded_tests = self.r.get_tests(["COMMAND_INJECTION"])
         self._compare_tests(expected, loaded_tests)
 
     def test_get_string_validation_tests(self):
         """Check that we get the proper string validation tests."""
-        expected = [
-            "STRING_VALIDATION_" + x for x in self.common_endings
-        ]
+        expected = [f"STRING_VALIDATION_{x}" for x in self.common_endings]
         loaded_tests = self.r.get_tests(["STRING_VALIDATION"])
         self._compare_tests(expected, loaded_tests)
 

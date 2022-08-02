@@ -44,8 +44,6 @@ def authenticate_v2(url,
     :param str serialize_format: Request body format(json/xml)
     :param str deserialize_format: Response body format(json/xml)
     """
-    headers = {}
-    kwargs = {}
     password_creds = None
     if url.endswith('/v2.0/'):
         url = '{0}tokens'.format(url)
@@ -53,10 +51,12 @@ def authenticate_v2(url,
         url = '{0}/tokens'.format(url)
     else:
         url = '{0}/v2.0/tokens'.format(url)
-    headers["Content-Type"] = "application/{0}".format(serialize_format)
-    headers["Accept"] = "application/{0}".format(deserialize_format)
-    kwargs["tenant_name"] = tenant_name
-    kwargs["tenant_id"] = tenant_id
+    headers = {
+        "Content-Type": "application/{0}".format(serialize_format),
+        "Accept": "application/{0}".format(deserialize_format),
+    }
+
+    kwargs = {"tenant_name": tenant_name, "tenant_id": tenant_id}
     password_creds = v2.PasswordCredentials(
         username=username, password=password)
     if scoped:
@@ -148,7 +148,6 @@ def authenticate_v3(url,
     :param str serialize_format: Request body format(json/xml)
     :param str deserialize_format: Response body format(json/xml)
     """
-    headers = {}
     kwargs = {}
     if url.endswith('/v3/'):
         url = '{0}auth/tokens'.format(url)
@@ -156,8 +155,7 @@ def authenticate_v3(url,
         url = '{0}/auth/tokens'.format(url)
     else:
         url = '{0}/v3/auth/tokens'.format(url)
-    headers["Content-Type"] = "application/json"
-    headers["Accept"] = "application/json"
+    headers = {"Content-Type": "application/json", "Accept": "application/json"}
     if user_id:
         domain = None
         username = None
@@ -194,22 +192,22 @@ def authenticate_v3(url,
 
 def authenticate_v3_config(user_section, scoped=False):
     """Verifies minimum requirement for v3 auth."""
-    endpoint = CONF.get(user_section).endpoint or CONF.user.endpoint
-    if not endpoint:
+    if endpoint := CONF.get(user_section).endpoint or CONF.user.endpoint:
+        return authenticate_v3(
+            url=endpoint,
+            username=CONF.get(user_section).username or CONF.user.username,
+            password=CONF.get(user_section).password or CONF.user.password,
+            user_id=CONF.get(user_section).user_id or CONF.user.user_id,
+            domain_id=CONF.get(user_section).domain_id or CONF.user.domain_id,
+            domain_name=CONF.get(user_section).domain_name or
+            CONF.user.domain_name,
+            token=CONF.get(user_section).token or CONF.user.token,
+            project_name=CONF.get(user_section).project_name or
+            CONF.user.project_name,
+            project_id=CONF.get(user_section).project_id or CONF.user.project_id,
+            scoped=scoped)
+    else:
         raise KeyError("Required config parameters not present: endpoint")
-    return authenticate_v3(
-        url=endpoint,
-        username=CONF.get(user_section).username or CONF.user.username,
-        password=CONF.get(user_section).password or CONF.user.password,
-        user_id=CONF.get(user_section).user_id or CONF.user.user_id,
-        domain_id=CONF.get(user_section).domain_id or CONF.user.domain_id,
-        domain_name=CONF.get(user_section).domain_name or
-        CONF.user.domain_name,
-        token=CONF.get(user_section).token or CONF.user.token,
-        project_name=CONF.get(user_section).project_name or
-        CONF.user.project_name,
-        project_id=CONF.get(user_section).project_id or CONF.user.project_id,
-        scoped=scoped)
 
 
 @memoize

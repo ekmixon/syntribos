@@ -28,10 +28,8 @@ def _get_client():
     auth_url = CONF.user.endpoint
     if auth_url.endswith("/v3/"):
         auth_url = auth_url[-1]
-    elif auth_url.endswith("/v3"):
-        pass
-    else:
-        auth_url = "{}/v3".format(auth_url)
+    elif not auth_url.endswith("/v3"):
+        auth_url = f"{auth_url}/v3"
     auth = identity.v3.Password(auth_url=auth_url,
                                 project_name=CONF.user.project_name,
                                 project_domain_name=CONF.user.domain_name,

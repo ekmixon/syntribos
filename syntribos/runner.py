@@ -79,10 +79,7 @@ class Runner(object):
 
         :param package: a package of tests for pkgutil to load
         """
-        for i, modname, k in pkgutil.walk_packages(
-                path=package.__path__,
-                prefix=package.__name__ + '.',
-                onerror=lambda x: None):
+        for i, modname, k in pkgutil.walk_packages(path=package.__path__, prefix=f'{package.__name__}.', onerror=lambda x: None):
             __import__(modname, fromlist=[])
 
     @classmethod
@@ -113,7 +110,7 @@ class Runner(object):
         for e in excluded_types:
             if e:
                 included = [x for x in included if e not in x[0]]
-        return (i for i in included)
+        return iter(included)
 
     @classmethod
     def get_logger(cls, template_name):
@@ -165,10 +162,7 @@ class Runner(object):
             os.makedirs(cls.log_path)
 
         # Create results file if any, otherwise use sys.stdout
-        if CONF.outfile:
-            cls.output = open(CONF.outfile, "w")
-        else:
-            cls.output = sys.stdout
+        cls.output = open(CONF.outfile, "w") if CONF.outfile else sys.stdout
 
     @classmethod
     def get_meta_vars(cls, file_path):
@@ -213,7 +207,12 @@ class Runner(object):
         else:
             cls.setup_config(use_file=True, argv=argv)
         try:
-            if CONF.sub_command.name == "init":
+            if CONF.sub_command.name == "download":
+                cli.print_symbol()
+                ENV.download_wrapper()
+                exit(0)
+
+            elif CONF.sub_command.name == "init":
                 cli.print_symbol()
                 ENV.initialize_syntribos_env()
                 exit(0)
@@ -221,11 +220,6 @@ class Runner(object):
             elif CONF.sub_command.name == "list_tests":
                 cli.print_symbol()
                 cls.list_tests()
-                exit(0)
-
-            elif CONF.sub_command.name == "download":
-                cli.print_symbol()
-                ENV.download_wrapper()
                 exit(0)
 
             elif CONF.sub_command.name == "root":
@@ -264,16 +258,15 @@ class Runner(object):
             if cls.worker:
                 raise Exception("No templates directory was found in the "
                                 "config file.")
-            else:
-                print(_("Attempting to download templates from {}").format(
-                    CONF.remote.templates_uri))
-                templates_path = remotes.get(CONF.remote.templates_uri)
-                try:
-                    templates_dir = ContentType("r")(templates_path)
-                except IOError:
-                    print(_("Not able to open `%s`; please verify path, "
-                            "exiting...") % templates_path)
-                    exit(1)
+            print(_("Attempting to download templates from {}").format(
+                CONF.remote.templates_uri))
+            templates_path = remotes.get(CONF.remote.templates_uri)
+            try:
+                templates_dir = ContentType("r")(templates_path)
+            except IOError:
+                print(_("Not able to open `%s`; please verify path, "
+                        "exiting...") % templates_path)
+                exit(1)
 
         print(_("\nPress Ctrl-C to pause or exit...\n"))
         meta_vars = None
@@ -288,12 +281,9 @@ class Runner(object):
                     _full_path = os.path.abspath(file_path)
                     print(syntribos.SEP)
                     print(
-                        "\n"
-                        "*** The JSON parser raised an exception when parsing "
-                        "{}. Check that the file contains "
-                        "correctly formatted JSON data. ***\n".format(
-                            _full_path)
+                        f"\n*** The JSON parser raised an exception when parsing {_full_path}. Check that the file contains correctly formatted JSON data. ***\n"
                     )
+
         for file_path, req_str in templates_dir:
             if "meta.json" in file_path:
                 continue
@@ -313,7 +303,7 @@ class Runner(object):
             ])
             LOG.debug(log_string)
             print(syntribos.SEP)
-            print("Template File...: {}".format(file_path))
+            print(f"Template File...: {file_path}")
             print(syntribos.SEP)
 
             if CONF.sub_command.name == "run":
@@ -363,10 +353,9 @@ class Runner(object):
                 print(_("\nRequest sucessfully generated!\n"))
                 output["successes"].append(file_path)
 
-            test_cases = list(
+            if test_cases := list(
                 test_class.get_test_cases(file_path, req_str, meta_vars)
-            )
-            if len(test_cases) > 0:
+            ):
                 for test in test_cases:
                     if test:
                         cls.run_test(test)
@@ -413,10 +402,12 @@ class Runner(object):
                     test_id=cli.colorize(
                         test_class.test_id, color="green"),
                     name=test_name.replace("_", " ").capitalize())
-                if not CONF.colorize:
-                    result_string = result_string.ljust(55)
-                else:
-                    result_string = result_string.ljust(60)
+                result_string = (
+                    result_string.ljust(60)
+                    if CONF.colorize
+                    else result_string.ljust(55)
+                )
+
                 try:
                     test_class.create_init_request(file_path, req_str,
                                                    meta_vars)

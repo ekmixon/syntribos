@@ -23,13 +23,11 @@ def validate_content(test):
     :returns: SynSignal
     """
     check_name = "VALID_CONTENT"
-    strength = 1.0
-    tags = []
-
-    if not test.init_signals.ran_check(check_name):
-        resp = test.init_resp
-    else:
-        resp = test.test_resp
+    resp = (
+        test.test_resp
+        if test.init_signals.ran_check(check_name)
+        else test.init_resp
+    )
 
     data = {"response_content": resp.text}
     # vulnerable to XST if response body has the request header
@@ -38,15 +36,20 @@ def validate_content(test):
         content_type = resp.headers["Content-type"]
         data["content_type"] = content_type
 
-    if data["response_content"]:
-        if data["response_content"].find(xst_header) != -1:
-            text = "Request header in response: {}".format(xst_header)
-            slug = "HEADER_XST"
+    if (
+        data["response_content"]
+        and data["response_content"].find(xst_header) != -1
+    ):
+        text = f"Request header in response: {xst_header}"
+        slug = "HEADER_XST"
 
-            return syntribos.signal.SynSignal(
-                data=data,
-                tags=tags,
-                text=text,
-                slug=slug,
-                strength=strength,
-                check_name=check_name)
+        strength = 1.0
+        tags = []
+
+        return syntribos.signal.SynSignal(
+            data=data,
+            tags=tags,
+            text=text,
+            slug=slug,
+            strength=strength,
+            check_name=check_name)

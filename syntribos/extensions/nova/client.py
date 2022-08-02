@@ -35,10 +35,8 @@ def create_connection(auth_url=None,
 
     if auth_url.endswith("/v3/"):
         auth_url = auth_url[-1]
-    elif auth_url.endswith("/v3"):
-        pass
-    else:
-        auth_url = "{}/v3".format(auth_url)
+    elif not auth_url.endswith("/v3"):
+        auth_url = f"{auth_url}/v3"
     auth = v3.Password(auth_url=auth_url,
                        project_name=project_name,
                        project_domain_name=project_domain_name,
@@ -52,9 +50,7 @@ def create_connection(auth_url=None,
 
 
 def _get_client():
-    # Required to use keystone client in order for nova client to properly
-    # discover service URL
-    nova_client = create_connection(
+    return create_connection(
         auth_url=CONF.user.endpoint,
         project_name=CONF.user.project_name,
         project_domain_name=CONF.user.domain_name,
@@ -62,9 +58,8 @@ def _get_client():
         project_domain_id=CONF.user.domain_id,
         user_domain_id=CONF.user.domain_id,
         username=CONF.user.username,
-        password=CONF.user.password)
-
-    return nova_client
+        password=CONF.user.password,
+    )
 
 
 def list_hypervisor_ids(conn):
@@ -79,12 +74,16 @@ def create_server(conn):
     token = id_client.get_scoped_token_v3("user")
     _url = urlparse.urlunparse(CONF.syntribos.endpoint)
     endpoint = urlparse.urlunparse(
-        (_url.scheme,
-         _url.hostname + ":9292",
-         _url.path,
-         _url.params,
-         _url.query,
-         _url.fragment))
+        (
+            _url.scheme,
+            f"{_url.hostname}:9292",
+            _url.path,
+            _url.params,
+            _url.query,
+            _url.fragment,
+        )
+    )
+
     _gc = GC(endpoint=endpoint, token=token)
     image = _gc.images.get(get_image_id())
     flavor = conn.flavors.get(get_flavor_id())
@@ -126,12 +125,16 @@ def get_image_id():
     token = id_client.get_scoped_token_v3("user")
     _url = urlparse.urlparse(CONF.syntribos.endpoint)
     endpoint = urlparse.urlunparse(
-        (_url.scheme,
-         _url.hostname + ":9292",
-         _url.path,
-         _url.params,
-         _url.query,
-         _url.fragment))
+        (
+            _url.scheme,
+            f"{_url.hostname}:9292",
+            _url.path,
+            _url.params,
+            _url.query,
+            _url.fragment,
+        )
+    )
+
     _gc = GC(endpoint=endpoint, token=token)
     image_ids = [image.id for image in _gc.images.list()]
     if not image_ids:

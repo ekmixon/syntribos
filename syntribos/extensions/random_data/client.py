@@ -26,8 +26,7 @@ def get_uuid():
     :returns: universally unique identifiers
     """
     while True:
-        random_data = str(uuid.uuid4())
-        yield random_data
+        yield str(uuid.uuid4())
 
 
 def fake_port():
@@ -35,10 +34,7 @@ def fake_port():
 
 
 def fake_ip():
-    return "{}:{}:{}:{}".format(random.randint(0, 255),
-                                random.randint(0, 255),
-                                random.randint(0, 255),
-                                random.randint(0, 255))
+    return f"{random.randint(0, 255)}:{random.randint(0, 255)}:{random.randint(0, 255)}:{random.randint(0, 255)}"
 
 
 def fake_mac():
@@ -74,8 +70,7 @@ def random_string(n=10, string_type="lower"):
     else:
         string_type = string.ascii_letters
     while True:
-        r = "".join(random.choice(string_type) for _ in range(n))
-        yield r
+        yield "".join(random.choice(string_type) for _ in range(n))
 
 
 def random_integer(beg=0, end=1478029570):
@@ -90,6 +85,6 @@ def random_utc_datetime():
     while True:
         offset = six.next(random_integer())
         epoch = time.time() - offset
-        ts = datetime.datetime.fromtimestamp(epoch).strftime(
-            "%Y-%m-%d %H:%M:%S")
-        yield ts
+        yield datetime.datetime.fromtimestamp(epoch).strftime(
+            "%Y-%m-%d %H:%M:%S"
+        )

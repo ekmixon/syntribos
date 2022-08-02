@@ -27,7 +27,7 @@ class _Images(object):
     def create(self, name):
         return _Image_meta_data()
 
-    def list(data):
+    def list(self):
         return []
 
 

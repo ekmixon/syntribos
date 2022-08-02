@@ -30,7 +30,7 @@ class ConfigUnittest(testtools.TestCase):
     def test_invalid_path_raises_ioerror(self):
         """Test that a random, invalid path raises IOError for each type."""
         filename = "/"
-        for i in range(0, 32):
+        for _ in range(32):
             filename += random.choice(string.ascii_letters)
         if not os.path.exists(filename):
             self.assertRaises(IOError, self.ept, filename)

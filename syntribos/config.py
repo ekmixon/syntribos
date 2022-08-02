@@ -35,7 +35,7 @@ def handle_config_exception(exc):
     if isinstance(exc, cfg.RequiredOptError):
         msg = "Missing option '{opt}'".format(opt=exc.opt_name)
         if exc.group:
-            msg += " in group '{}'".format(exc.group)
+            msg += f" in group '{exc.group}'"
         CONF.print_help()
 
     elif isinstance(exc, cfg.ConfigFilesNotFoundError):
@@ -110,8 +110,7 @@ def sub_commands(sub_parser):
 
 
 def list_opts():
-    results = []
-    results.append((None, list_cli_opts()))
+    results = [(None, list_cli_opts())]
     results.append((syntribos_group, list_syntribos_opts()))
     results.append((user_group, list_user_opts()))
     results.append((test_group, list_test_opts()))

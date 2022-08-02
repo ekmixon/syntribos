@@ -21,21 +21,20 @@ def has_string(test):
     :returns: syntribos.signal.SynSignal
     """
 
-    slug = "FAILURE_KEYS_PRESENT"
     data = {
         "req": test.test_resp.request,
         "resp": test.test_resp,
         "failed_strings": []
     }
 
-    failure_keys = test.failure_keys
-    if failure_keys:
+    if failure_keys := test.failure_keys:
         data["failed_strings"] = [key for key in failure_keys
                                   if key in test.test_resp.text]
 
     if len(data["failed_strings"]) > 0:
         keys = "\n".join([str(s) for s in data["failed_strings"]])
-        text = "Failed strings present " + keys
+        text = f"Failed strings present {keys}"
+        slug = "FAILURE_KEYS_PRESENT"
         return syntribos.signal.SynSignal(
             check_name="has_string",
             text=text,

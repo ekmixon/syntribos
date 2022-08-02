@@ -106,8 +106,11 @@ class HTTPParserUnittest(testtools.TestCase):
 
     def test_call_external_get_uuid(self):
         """Tests calling 'get_uuid' in URL string."""
-        string = 'GET /v1/CALL_EXTERNAL|'
-        string += 'syntribos.extensions.random_data.client:get_uuid:[]|'
+        string = (
+            'GET /v1/CALL_EXTERNAL|'
+            + 'syntribos.extensions.random_data.client:get_uuid:[]|'
+        )
+
         parsed_string = parser.call_external_functions(string)
         self.assertRegex(parsed_string, r"GET /v1/[a-f0-9]+$")
 

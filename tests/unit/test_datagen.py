@@ -38,9 +38,8 @@ test_params = {"var1": "val1", "var2": "val2"}
 def get_url(path):
     """Helper method to append endpoint and slash if necessary."""
     return "{endpoint}{sep}{path}".format(
-        endpoint=endpoint,
-        sep="/" if not path.startswith("/") else "",
-        path=path)
+        endpoint=endpoint, sep="" if path.startswith("/") else "/", path=path
+    )
 
 
 def req(method, path, *args, **kwargs):
@@ -151,7 +150,7 @@ class FuzzDatagenUnittest(testtools.TestCase):
 
     def test_invalid_type(self):
         """Test _fuzz_data with a list (invalid type)."""
-        data = set(["list", "of", "strings"])
+        data = {"list", "of", "strings"}
         strings = ["test"]
 
         self.assertRaises(
@@ -161,9 +160,7 @@ class FuzzDatagenUnittest(testtools.TestCase):
     def test_str_combos_with_name(self):
         """Test building string combinations with 1 named URL variable."""
         data = "/api/v1/{key:val}"
-        results = [
-            d for d in fuzz_datagen._build_str_combinations("test", data)
-        ]
+        results = list(fuzz_datagen._build_str_combinations("test", data))
         self.assertIn(("/api/v1/test", "key"), results)
         self.assertEqual(1, len(results))
 
@@ -181,11 +178,10 @@ class FuzzDatagenUnittest(testtools.TestCase):
                                     "/api/v1/{key:val}/path/test2", "test2",
                                     "otherkey")
         ]
-        results = [
-            d
-            for d in fuzz_datagen._fuzz_data(strings, data, action_field,
-                                             "unittest")
-        ]
+        results = list(
+            fuzz_datagen._fuzz_data(strings, data, action_field, "unittest")
+        )
+
         self.assertEqual(expected_results, results)
 
     def test_fuzz_data_with_one_named_one_unnamed(self):
@@ -200,20 +196,17 @@ class FuzzDatagenUnittest(testtools.TestCase):
              "key"), ("unitteststr2_model2", "/api/v1/{key:val}/path/test2",
                       "test2", "otherkey")
         ]
-        results = [
-            d
-            for d in fuzz_datagen._fuzz_data(strings, data, action_field,
-                                             "unittest")
-        ]
+        results = list(
+            fuzz_datagen._fuzz_data(strings, data, action_field, "unittest")
+        )
+
         self.assertEqual(expected_results, results)
 
     def test_post_fuzz_req_url_vars(self):
         """Test fuzz_request with 2 named URL params."""
         req = post_req("/api/v1/{key:val}/path/{otherkey:val2}")
         strings = ["test"]
-        results = [
-            d for d in fuzz_datagen.fuzz_request(req, strings, "url", "ut")
-        ]
+        results = list(fuzz_datagen.fuzz_request(req, strings, "url", "ut"))
         req_objs = [r[1] for r in results]
         urls = [o.url for o in req_objs]
         self.assertIn(get_url("/api/v1/test/path/val2"), urls)
@@ -226,9 +219,7 @@ class FuzzDatagenUnittest(testtools.TestCase):
             "/api/v1/{key:val}/path/{otherkey:val2}", data=test_dict)
         req.data_type = 'json'
         strings = ["test"]
-        results = [
-            d for d in fuzz_datagen.fuzz_request(req, strings, "data", "ut")
-        ]
+        results = list(fuzz_datagen.fuzz_request(req, strings, "data", "ut"))
         req_objs = [r[1] for r in results]
         for d in [o.data for o in req_objs]:
             _dict = json.loads(d)

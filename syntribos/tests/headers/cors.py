@@ -51,10 +51,7 @@ class CorsHeader(base.BaseTestCase):
             slugs for slugs in self.test_signals.all_slugs
             if "HEADER_CORS" in slugs]
         for slug in cors_slugs:
-            if "ORIGIN" in slug:
-                test_severity = syntribos.HIGH
-            else:
-                test_severity = syntribos.MEDIUM
+            test_severity = syntribos.HIGH if "ORIGIN" in slug else syntribos.MEDIUM
             self.register_issue(
                 defect_type="CORS_HEADER",
                 severity=test_severity,

@@ -24,26 +24,26 @@ class Content(object):
 class _FakeVolume(object):
     """Fake cinder client object."""
 
-    def create(*args, **kwargs):
+    def create(self, **kwargs):
         return Content()
 
-    def list(data):
+    def list(self):
         return []
 
 
 class _FakeVolumeType(object):
-    def create(*args, **kwargs):
+    def create(self, **kwargs):
         return Content()
 
-    def list(data):
+    def list(self):
         return []
 
 
 class _FakeSnapshot(object):
-    def create(*args, **kwargs):
+    def create(self, **kwargs):
         return Content()
 
-    def list(data):
+    def list(self):
         return []
 
 

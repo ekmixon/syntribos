@@ -48,10 +48,10 @@ class AuthResponse(
             user_model=User._xml_ele_to_obj(cls._find(data, "user")))
 
     def get_service(self, name):
-        for service in self.service_catalog:
-            if service.name == name:
-                return service
-        return None
+        return next(
+            (service for service in self.service_catalog if service.name == name),
+            None,
+        )
 
 
 class Metadata(syntribos.extensions.identity.models.base.BaseIdentityModel):
@@ -71,11 +71,12 @@ class Tenant(syntribos.extensions.identity.models.base.BaseIdentityModel):
     @classmethod
     def _xml_ele_to_obj(cls, data):
         description = data.findtext('description')
-        return cls(name=data.attrib.get("name"),
-                   id_=data.attrib.get("id"),
-                   enabled=True
-                   if data.attrib.get('enabled') == "true" else False,
-                   description=description)
+        return cls(
+            name=data.attrib.get("name"),
+            id_=data.attrib.get("id"),
+            enabled=data.attrib.get('enabled') == "true",
+            description=description,
+        )
 
     @classmethod
     def _dict_to_obj(cls, data_dict):
@@ -213,8 +214,7 @@ class Auth(syntribos.extensions.identity.models.base.BaseIdentityModel):
         super(Auth, self).__init__(locals())
 
     def _obj_to_dict(self):
-        dic = {}
-        dic["passwordCredentials"] = self._get_sub_model(self.password_creds)
+        dic = {"passwordCredentials": self._get_sub_model(self.password_creds)}
         dic["tenantId"] = self.tenant_id
         dic["tenantName"] = self.tenant_name
         return {"auth": self._remove_empty_values(dic)}

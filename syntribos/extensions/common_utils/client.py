@@ -66,8 +66,7 @@ def epoch_time(offset=0):
 def utc_datetime():
     """Returns utc date time."""
     epoch = epoch_time()
-    ts = datetime.datetime.fromtimestamp(epoch).strftime("%Y-%m-%d %H:%M:%S")
-    return ts
+    return datetime.datetime.fromtimestamp(epoch).strftime("%Y-%m-%d %H:%M:%S")
 
 
 def base64_encode(data):

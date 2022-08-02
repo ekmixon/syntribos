@@ -25,8 +25,7 @@ CONF = cfg.CONF
 
 
 def is_dict(content=None):
-    return isinstance(content, CaseInsensitiveDict) or isinstance(content,
-                                                                  dict)
+    return isinstance(content, (CaseInsensitiveDict, dict))
 
 
 def is_string(content=None):
@@ -81,19 +80,18 @@ def compress(content, threshold=512):
     if is_dict(content):
         for key in content:
             content[key] = compress(content[key])
-    if is_string(content) and compression_enabled:
-        if len(content) > threshold:
-            less_data = content[:50]
-            compressed_data = base64.b64encode(
-                zlib.compress(bytes(content.encode("utf-8"))))
-            if not six.PY2:
-                compressed_data = str(compressed_data.decode("utf-8"))
-            return pprint.pformat(
-                "\n***Content compressed by Syntribos.***"
-                "\nFirst fifty characters of content:\n"
-                "***{data}***"
-                "\nBase64 encoded compressed content:\n"
-                "{compressed}"
-                "\n***End of compressed content.***\n".format(
-                    data=less_data, compressed=compressed_data))
+    if is_string(content) and compression_enabled and len(content) > threshold:
+        less_data = content[:50]
+        compressed_data = base64.b64encode(
+            zlib.compress(bytes(content.encode("utf-8"))))
+        if not six.PY2:
+            compressed_data = str(compressed_data.decode("utf-8"))
+        return pprint.pformat(
+            "\n***Content compressed by Syntribos.***"
+            "\nFirst fifty characters of content:\n"
+            "***{data}***"
+            "\nBase64 encoded compressed content:\n"
+            "{compressed}"
+            "\n***End of compressed content.***\n".format(
+                data=less_data, compressed=compressed_data))
     return content

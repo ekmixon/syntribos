@@ -61,30 +61,22 @@ def is_venv():
 
 
 def get_venv_root():
-    # Virtualenv detection
-    path = ""
-    if is_venv():
-        path = os.path.abspath(os.path.join(sys.prefix, FOLDER))
+    path = os.path.abspath(os.path.join(sys.prefix, FOLDER)) if is_venv() else ""
     return path
 
 
 def get_syntribos_root():
     """This determines the proper path to use as syntribos' root directory."""
-    path = ""
     try:
-        custom_root = (
+        if custom_root := (
             CONF.syntribos.custom_root or CONF.custom_root or ""
-        )
-        if custom_root:
+        ):
             return expand_path(custom_root)
     except Exception:
         raise
     home_root = get_user_home_root()
 
-    # Virtualenv detection
-    if get_venv_root():
-        path = get_venv_root()
-
+    path = get_venv_root() or ""
     # Use home dir if syntribos folder already exists, or no virtualenv found
     if os.path.exists(home_root) or not path:
         path = home_root
@@ -176,8 +168,12 @@ def create_conf_file(created_folders=None, remote_path=None):
             "[logging]\n"
             "log_dir={logs}\n"
         ).format(
-            payloads=remote_path if remote_path else payloads,
-            templates=templates, custom_root=custom_root, logs=logs)
+            payloads=remote_path or payloads,
+            templates=templates,
+            custom_root=custom_root,
+            logs=logs,
+        )
+
         f.write(template)
     return conf_file
 
@@ -187,7 +183,7 @@ def initialize_syntribos_env():
 
     def prompt_yes(prompt):
         answer = input(prompt).lower()
-        return answer == "yes" or answer == "y"
+        return answer in ["yes", "y"]
 
     def prompt_yes_or_quit(prompt):
         prompt = ("{0}\n\tType 'yes' or 'y' to continue, anything else "
@@ -219,22 +215,24 @@ def initialize_syntribos_env():
             prompt_yes_or_quit(prompt)
 
         else:
-            if not CONF.sub_command.no_downloads:
-                prompt = ("Syntribos has not been initialized. By default, "
-                          "this process will create a '.syntribos' folder\n "
-                          "with a barebones configuration file, and "
-                          "sub-folders for templates, debug logs, and\n "
-                          "payloads. Syntribos will also attempt to download "
-                          "payload files, which are necessary for fuzz\n "
-                          "tests to run. To avoid this behavior, run this "
-                          "command again with the --no_downloads flag")
-            else:
-                prompt = ("Syntribos has not been initialized. By default, "
-                          "this process will create a '.syntribos' folder\n "
-                          "with a barebones configuration file, and "
-                          "sub-folders for templates, debug logs, and\n "
-                          "payloads. Syntribos will not attempt to download "
-                          "any files during the initialization process.")
+            prompt = (
+                "Syntribos has not been initialized. By default, "
+                "this process will create a '.syntribos' folder\n "
+                "with a barebones configuration file, and "
+                "sub-folders for templates, debug logs, and\n "
+                "payloads. Syntribos will not attempt to download "
+                "any files during the initialization process."
+                if CONF.sub_command.no_downloads
+                else "Syntribos has not been initialized. By default, "
+                "this process will create a '.syntribos' folder\n "
+                "with a barebones configuration file, and "
+                "sub-folders for templates, debug logs, and\n "
+                "payloads. Syntribos will also attempt to download "
+                "payload files, which are necessary for fuzz\n "
+                "tests to run. To avoid this behavior, run this "
+                "command again with the --no_downloads flag"
+            )
+
             prompt_yes_or_quit(prompt)
 
         if is_venv():
@@ -299,16 +297,12 @@ def is_syntribos_initialized():
         return False
     flat_list = []
     for ele in [get_default_conf_file(), CONF.config_file, CONF.config_dir]:
-        if ele and isinstance(ele, str):
-            flat_list.append(ele)
-        elif ele and isinstance(ele, list):
-            for s in ele:
-                flat_list.append(s)
-
-    if any([os.path.exists(conf_file) for conf_file in flat_list]):
-        return True
-
-    return False
+        if ele:
+            if isinstance(ele, str):
+                flat_list.append(ele)
+            elif isinstance(ele, list):
+                flat_list.extend(iter(ele))
+    return any(os.path.exists(conf_file) for conf_file in flat_list)
 
 
 def download_wrapper():

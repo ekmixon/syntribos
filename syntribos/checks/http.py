@@ -47,7 +47,7 @@ def check_fail(exception):
     }
     text = "An exception was encountered when sending the request. {desc}"
     slug = "HTTP_FAIL_{exc}".format(exc=data["exception_name"])
-    tags = set(["EXCEPTION_RAISED"])
+    tags = {"EXCEPTION_RAISED"}
 
     invalid_request_exceptions = (rex.URLRequired, rex.MissingSchema,
                                   rex.InvalidSchema, rex.InvalidURL)
@@ -93,11 +93,10 @@ def check_status_code(response):
         "response": response,
         "status_code": response.status_code,
         "reason": response.reason,
+        "details": codes[response.status_code]
+        if codes.get(response.status_code, None)
+        else "Unknown",
     }
-    if codes.get(response.status_code, None):
-        data["details"] = codes[response.status_code]
-    else:
-        data["details"] = "Unknown"
 
     text = ("A {code} HTTP status code was returned by the server, with reason"
             " '{reason}'. This status code usually means '{details}'.").format(

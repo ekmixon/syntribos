@@ -91,10 +91,11 @@ class IssueTestResult(unittest.TextTestResult):
         for issue in test.failures:
             self.raw_issues.append(issue)
             defect_type = issue.defect_type
-            if any([
-                    True for x in CONF.syntribos.exclude_results
-                    if x and x in defect_type
-            ]):
+            if any(
+                True
+                for x in CONF.syntribos.exclude_results
+                if x and x in defect_type
+            ):
                 continue
 
             min_sev = syntribos.RANKING_VALUES[CONF.min_severity]
@@ -106,13 +107,19 @@ class IssueTestResult(unittest.TextTestResult):
             path = issue.path
             url = "{0}{1}".format(target, path)
             description = issue.description
-            failure_obj = None
+            failure_obj = next(
+                (
+                    f
+                    for f in self.failures
+                    if (
+                        f["url"] == url
+                        and f["defect_type"] == defect_type
+                        and f["description"] == description
+                    )
+                ),
+                None,
+            )
 
-            for f in self.failures:
-                if (f["url"] == url and f["defect_type"] == defect_type and
-                        f["description"] == description):
-                    failure_obj = f
-                    break
             if not failure_obj:
                 failure_obj = {
                     "url": url,
@@ -126,17 +133,15 @@ class IssueTestResult(unittest.TextTestResult):
 
             signals = {}
             if issue.init_signals:
-                signals["init_signals"] = set(
-                    [s.slug for s in issue.init_signals])
+                signals["init_signals"] = {s.slug for s in issue.init_signals}
             if issue.test_signals:
-                signals["test_signals"] = set(
-                    [s.slug for s in issue.test_signals])
+                signals["test_signals"] = {s.slug for s in issue.test_signals}
             if issue.diff_signals:
-                signals["diff_signals"] = set(
-                    [s.slug for s in issue.diff_signals])
+                signals["diff_signals"] = {s.slug for s in issue.diff_signals}
             sev_rating = syntribos.RANKING[issue.severity]
             conf_rating = syntribos.RANKING[issue.confidence]
 
+            instance_obj = None
             if issue.impacted_parameter:
                 method = issue.impacted_parameter.method
                 loc = issue.impacted_parameter.location
@@ -151,7 +156,6 @@ class IssueTestResult(unittest.TextTestResult):
                 if loc == "data":
                     param["type"] = content_type
 
-                instance_obj = None
                 for i in failure_obj["instances"]:
                     if (i["confidence"] == conf_rating and
                             i["severity"] == sev_rating and
@@ -159,10 +163,9 @@ class IssueTestResult(unittest.TextTestResult):
                             i["param"]["location"] == loc):
 
                         i["param"]["variables"].add(name)
-                        for sig_type in signals:
+                        for sig_type, value in signals.items():
                             if sig_type in i["signals"]:
-                                i["signals"][sig_type].update(signals[
-                                    sig_type])
+                                i["signals"][sig_type].update(value)
                             else:
                                 i["signals"][sig_type] = signals[sig_type]
                         i["strings"].add(payload_string)
@@ -170,26 +173,25 @@ class IssueTestResult(unittest.TextTestResult):
                         break
 
                 if not instance_obj:
-                    param["variables"] = set([name])
+                    param["variables"] = {name}
                     instance_obj = {
                         "confidence": conf_rating,
                         "severity": sev_rating,
                         "param": param,
-                        "strings": set([payload_string]),
-                        "signals": signals
+                        "strings": {payload_string},
+                        "signals": signals,
                     }
+
                     failure_obj["instances"].append(instance_obj)
                     self.stats["unique_failures"] += 1
                     self.output["stats"]["severity"][sev_rating] += 1
             else:
-                instance_obj = None
                 for i in failure_obj["instances"]:
                     if (i["confidence"] == conf_rating and
                             i["severity"] == sev_rating):
-                        for sig_type in signals:
+                        for sig_type, value_ in signals.items():
                             if sig_type in i["signals"]:
-                                i["signals"][sig_type].update(signals[
-                                    sig_type])
+                                i["signals"][sig_type].update(value_)
                             else:
                                 i["signals"][sig_type] = signals[sig_type]
                         instance_obj = i
@@ -214,7 +216,7 @@ class IssueTestResult(unittest.TextTestResult):
         :type tuple: Tuple of format ``(type, value, traceback)``
         """
         with lock:
-            err_str = "{}: {}".format(err[0].__name__, str(err[1]))
+            err_str = f"{err[0].__name__}: {str(err[1])}"
             for e in self.errors:
                 if e['error'] == err_str:
                     if self.getDescription(test) in e['test']:

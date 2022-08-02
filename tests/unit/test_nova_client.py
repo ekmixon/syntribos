@@ -25,23 +25,23 @@ class Content(object):
 class _Fakeserver(object):
     """Fake nova client object."""
 
-    def create(*args, **kwargs):
+    def create(self, **kwargs):
         return Content()
 
-    def list(data):
+    def list(self):
         return []
 
 
 class _FakeHypervisor(object):
-    def list(data):
+    def list(self):
         return [Content()]
 
 
 class _FakeAggregates(object):
-    def create(*args, **kwargs):
+    def create(self, **kwargs):
         return Content()
 
-    def list(data):
+    def list(self):
         return []
 
 

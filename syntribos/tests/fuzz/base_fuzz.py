@@ -52,9 +52,8 @@ class BaseFuzzTestCase(base.BaseTestCase):
             with open(path, "r") as fp:
                 return fp.read().splitlines()
         except (IOError, AttributeError, TypeError) as e:
-            LOG.error("Exception raised: {}".format(e))
-            print("\nPayload file for test '{}' not readable, "
-                  "exiting...".format(cls.test_name))
+            LOG.error(f"Exception raised: {e}")
+            print(f"\nPayload file for test '{cls.test_name}' not readable, exiting...")
             exit(1)
 
     @classmethod
@@ -101,19 +100,21 @@ class BaseFuzzTestCase(base.BaseTestCase):
                              "fault that may lead to further vulnerabilities"
                              ).format(self.test_resp.status_code))
         self.diff_signals.register(length_diff(self))
-        if "LENGTH_DIFF_OVER" in self.diff_signals:
-            if self.init_resp.status_code == self.test_resp.status_code:
-                description = ("The difference in length between the response "
-                               "to the baseline request and the request "
-                               "returned when sending an attack string "
-                               "exceeds {0} percent, which could indicate a "
-                               "vulnerability to injection attacks"
-                               ).format(CONF.test.length_diff_percent)
-                self.register_issue(
-                    defect_type="length_diff",
-                    severity=syntribos.LOW,
-                    confidence=syntribos.LOW,
-                    description=description)
+        if (
+            "LENGTH_DIFF_OVER" in self.diff_signals
+            and self.init_resp.status_code == self.test_resp.status_code
+        ):
+            description = ("The difference in length between the response "
+                           "to the baseline request and the request "
+                           "returned when sending an attack string "
+                           "exceeds {0} percent, which could indicate a "
+                           "vulnerability to injection attacks"
+                           ).format(CONF.test.length_diff_percent)
+            self.register_issue(
+                defect_type="length_diff",
+                severity=syntribos.LOW,
+                confidence=syntribos.LOW,
+                description=description)
 
     def test_case(self):
         """Performs the test

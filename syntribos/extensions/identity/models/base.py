@@ -114,9 +114,7 @@ class BaseIdentityModel(object):
         if element is None:
             return ET.Element(None)
         new_element = element.find(tag)
-        if new_element is None:
-            return ET.Element(None)
-        return new_element
+        return ET.Element(None) if new_element is None else new_element
 
     @staticmethod
     def _build_list_model(data, field_name, model):
@@ -155,15 +153,12 @@ class BaseIdentityModel(object):
         :returns: list of dicts if `element` is None or  `element` otherwise.
         """
         if element is None:
-            if items is None:
-                return []
-            return [item._obj_to_dict() for item in items]
-        else:
-            if items is None:
-                return element
-            for item in items:
-                element.append(item._obj_to_xml_ele())
+            return [] if items is None else [item._obj_to_dict() for item in items]
+        if items is None:
             return element
+        for item in items:
+            element.append(item._obj_to_xml_ele())
+        return element
 
     @staticmethod
     def _create_text_element(name, text):
@@ -196,9 +191,8 @@ class BaseIdentityModel(object):
         :rtype: `dict`
         """
         if isinstance(data, dict):
-            return dict(
-                (k, v) for k, v in data.items() if v not in (
-                    [], {}, None))
+            return {k: v for k, v in data.items() if v not in ([], {}, None)}
+
         elif isinstance(data, ET.Element):
             if data.attrib:
                 data.attrib = cls._remove_empty_values(data.attrib)
@@ -215,12 +209,6 @@ class BaseIdentityModel(object):
         :param boolean json: True if converting to json, false if XML
         """
         if json:
-            if model is not None:
-                return model._obj_to_dict()
-            else:
-                return None
+            return model._obj_to_dict() if model is not None else None
         else:
-            if model is not None:
-                return model._obj_to_xml_ele()
-            else:
-                return ET.Element(None)
+            return model._obj_to_xml_ele() if model is not None else ET.Element(None)

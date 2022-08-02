@@ -43,8 +43,7 @@ def create_subnet(conn, network_id):
 
 
 def list_subnet_ids(conn):
-    subnet_ids = [subnet["id"] for subnet in conn.list_subnets()["subnets"]]
-    return subnet_ids
+    return [subnet["id"] for subnet in conn.list_subnets()["subnets"]]
 
 
 def create_port(conn, network_id):
@@ -55,8 +54,7 @@ def create_port(conn, network_id):
 
 
 def list_port_ids(conn):
-    port_ids = [port["id"] for port in conn.list_ports()["ports"]]
-    return port_ids
+    return [port["id"] for port in conn.list_ports()["ports"]]
 
 
 def create_security_group(conn):
@@ -66,9 +64,7 @@ def create_security_group(conn):
 
 
 def list_security_group_ids(conn):
-    sec_gp_ids = [sg["id"] for sg in conn.list_security_groups(
-    )["security_groups"]]
-    return sec_gp_ids
+    return [sg["id"] for sg in conn.list_security_groups()["security_groups"]]
 
 
 def create_router(conn, network_id, subnet_id):
@@ -91,8 +87,7 @@ def create_router(conn, network_id, subnet_id):
 
 
 def list_router_ids(conn):
-    router_ids = [router["id"] for router in conn.list_routers()["routers"]]
-    return router_ids
+    return [router["id"] for router in conn.list_routers()["routers"]]
 
 
 @memoize

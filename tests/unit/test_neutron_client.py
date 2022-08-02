@@ -35,19 +35,19 @@ class _FakeNetwork(object):
     def create_router(self, data):
         return {"id": 1234}
 
-    def list_networks(data):
+    def list_networks(self):
         return {"networks": []}
 
-    def list_subnets(data):
+    def list_subnets(self):
         return {"subnets": []}
 
-    def list_ports(data):
+    def list_ports(self):
         return {"ports": []}
 
-    def list_security_groups(data):
+    def list_security_groups(self):
         return {"security_groups": []}
 
-    def list_routers(data):
+    def list_routers(self):
         return {"routers": []}
 
 

@@ -64,11 +64,10 @@ class RequestCreator(object):
             index = index + 1
         method, url, params, version = cls._parse_url_line(lines[0], endpoint)
         headers = cls._parse_headers(lines[1:index])
-        content_type = ''
-        for h in headers:
-            if h.upper() == 'CONTENT-TYPE':
-                content_type = headers[h]
-                break
+        content_type = next(
+            (headers[h] for h in headers if h.upper() == 'CONTENT-TYPE'), ''
+        )
+
         data, data_type = cls._parse_data(lines[index + 1:], content_type)
         return RequestObject(
             method=method, url=url, headers=headers, params=params, data=data,
@@ -84,10 +83,8 @@ class RequestCreator(object):
                   object read in from meta.json
         """
         if not cls.meta_vars:
-            msg = ("Template contains reference to meta variable of the form "
-                   "'|{}|', but no valid meta.json file was found in the "
-                   "templates directory. Check that your templates reference "
-                   "a meta.json file that is correctly formatted.".format(var))
+            msg = f"Template contains reference to meta variable of the form '|{var}|', but no valid meta.json file was found in the templates directory. Check that your templates reference a meta.json file that is correctly formatted."
+
             raise TemplateParseException(msg)
 
         if var not in cls.meta_vars:
@@ -97,8 +94,7 @@ class RequestCreator(object):
         var_dict = cls.meta_vars[var]
         if "type" in var_dict:
             var_dict["var_type"] = var_dict.pop("type")
-        var_obj = VariableObject(var, prefix=prefix, suffix=suffix, **var_dict)
-        return var_obj
+        return VariableObject(var, prefix=prefix, suffix=suffix, **var_dict)
 
     @classmethod
     def replace_one_variable(cls, var_obj):
@@ -158,10 +154,8 @@ class RequestCreator(object):
     def _replace_dict_variables(cls, dic):
         """Recursively evaluates all meta variables in a given dict."""
         for (key, value) in dic.items():
-            # Keys dont get fuzzed, so can handle them here
-            match = re.search(cls.METAVAR, key)
-            if match:
-                replaced_key = match.group(0).strip("|")
+            if match := re.search(cls.METAVAR, key):
+                replaced_key = match[0].strip("|")
                 key_obj = cls._create_var_obj(replaced_key)
                 replaced_key = cls.replace_one_variable(key_obj)
                 new_key = re.sub(cls.METAVAR, replaced_key, key)
@@ -169,12 +163,11 @@ class RequestCreator(object):
                 dic[new_key] = value
             # Vals are fuzzed so they need to be passed to datagen as an object
             if isinstance(value, six.string_types):
-                match = re.search(cls.METAVAR, value)
-                if match:
+                if match := re.search(cls.METAVAR, value):
                     start, end = match.span()
                     prefix = value[:start]
                     suffix = value[end:]
-                    var_str = match.group(0).strip("|")
+                    var_str = match[0].strip("|")
                     val_obj = cls._create_var_obj(var_str, prefix, suffix)
                     if key in dic:
                         dic[key] = val_obj
@@ -202,7 +195,7 @@ class RequestCreator(object):
             if not match:
                 break
             obj_ref_uuid = str(uuid.uuid4()).replace("-", "")
-            var_name = match.group(1).strip("|")
+            var_name = match[1].strip("|")
             var_obj = cls._create_var_obj(var_name)
             _string_var_objs[obj_ref_uuid] = var_obj
             string = re.sub(cls.METAVAR, obj_ref_uuid, string, count=1)
@@ -225,10 +218,7 @@ class RequestCreator(object):
         if len(url) == 2:
             for param in url[1].split("&"):
                 param = param.split("=", 1)
-                if len(param) > 1:
-                    params[param[0]] = param[1]
-                else:
-                    params[param[0]] = ""
+                params[param[0]] = param[1] if len(param) > 1 else ""
         url = url[0]
         url = urlparse.urljoin(endpoint, url)
         if method not in valid_methods:
@@ -324,9 +314,9 @@ class RequestCreator(object):
             match = re.search(cls.EXTERNAL, string)
             if not match:
                 break
-            dot_path = match.group(1)
-            func_name = match.group(2)
-            arg_list = match.group(3) or "[]"
+            dot_path = match[1]
+            func_name = match[2]
+            arg_list = match[3] or "[]"
             mod = importlib.import_module(dot_path)
             func = getattr(mod, func_name)
             args = json.loads(arg_list)
@@ -352,13 +342,13 @@ class RequestCreator(object):
 
         if match:
             try:
-                dot_path = match.group(1)
-                func_name = match.group(2)
+                dot_path = match[1]
+                func_name = match[2]
                 mod = importlib.import_module(dot_path)
                 func = getattr(mod, func_name)
 
                 if func_string_has_args and not args:
-                    arg_list = match.group(3)
+                    arg_list = match[3]
                     args = json.loads(arg_list)
 
                 val = func(*args)
@@ -382,10 +372,7 @@ class RequestCreator(object):
                         "format") % string
                 raise TemplateParseException(msg)
 
-        if isinstance(val, types.GeneratorType):
-            return str(six.next(val))
-        else:
-            return str(val)
+        return str(six.next(val)) if isinstance(val, types.GeneratorType) else str(val)
 
 
 class VariableObject(object):

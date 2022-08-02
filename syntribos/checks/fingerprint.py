@@ -25,10 +25,11 @@ def server_software(test):
     check_name = "FINGERPRINT"
     strength = 1.0
 
-    if not test.init_signals.ran_check(check_name):
-        resp = test.init_resp
-    else:
-        resp = test.test_resp
+    resp = (
+        test.test_resp
+        if test.init_signals.ran_check(check_name)
+        else test.init_resp
+    )
 
     servers = {
         'Apache': 'APACHE',
@@ -56,11 +57,7 @@ def server_software(test):
 
     server_name = servers.get(server, 'UNKNOWN')
 
-    if '/' in server:
-        version = server.split('/')[1]
-    else:
-        version = 0
-
+    version = server.split('/')[1] if '/' in server else 0
     text = (
         "Server Details:\n"
         "\tServer Software: {0}\n"

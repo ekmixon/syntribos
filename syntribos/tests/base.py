@@ -69,9 +69,8 @@ class TestType(type):
         new_class = super(TestType, cls).__new__(
             cls, cls_name, cls_parents, cls_attr)
         test_name = getattr(new_class, "test_name", None)
-        if test_name is not None:
-            if test_name not in test_table:
-                test_table[test_name] = new_class
+        if test_name is not None and test_name not in test_table:
+            test_table[test_name] = new_class
         return new_class
 
 
@@ -186,28 +185,28 @@ class BaseTestCase(unittest.TestCase):
     @classmethod
     def tearDownClass(cls):
         super(BaseTestCase, cls).tearDownClass()
-        if not cls.failures:
-            if "EXCEPTION_RAISED" in cls.test_signals:
-                sig = cls.test_signals.find(
-                    tags="EXCEPTION_RAISED")[0]
-                exc_name = type(sig.data["exception"]).__name__
-                if ("CONNECTION_FAIL" in sig.tags):
-                    six.raise_from(FatalHTTPError(
-                        "The remote target has forcibly closed the connection "
-                        "with Syntribos and resulted in exception '{}'. This "
-                        "could potentially mean that a fatal error was "
-                        "encountered within the target application or server"
-                        " itself.".format(exc_name)), sig.data["exception"])
-                else:
-                    raise sig.data["exception"]
+        if not cls.failures and "EXCEPTION_RAISED" in cls.test_signals:
+            sig = cls.test_signals.find(
+                tags="EXCEPTION_RAISED")[0]
+            exc_name = type(sig.data["exception"]).__name__
+            if ("CONNECTION_FAIL" in sig.tags):
+                six.raise_from(
+                    FatalHTTPError(
+                        f"The remote target has forcibly closed the connection with Syntribos and resulted in exception '{exc_name}'. This could potentially mean that a fatal error was encountered within the target application or server itself."
+                    ),
+                    sig.data["exception"],
+                )
+
+            else:
+                raise sig.data["exception"]
 
     @classmethod
     def tearDown(cls):
         get_slugs = [sig.slug for sig in cls.test_signals]
         get_checks = [sig.check_name for sig in cls.test_signals]
-        test_signals_used = "Signals: " + str(get_slugs)
+        test_signals_used = f"Signals: {get_slugs}"
         LOG.debug(test_signals_used)
-        test_checks_used = "Checks used: " + str(get_checks)
+        test_checks_used = f"Checks used: {get_checks}"
         LOG.debug(test_checks_used)
 
     def run_test_case(self):

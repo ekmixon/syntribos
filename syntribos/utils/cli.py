@@ -39,11 +39,13 @@ def colorize(string, color="nocolor"):
     colors = dict(list(zip(color_names, list(range(31, 35)))))
     colors["nocolor"] = 0  # No Color
 
-    if not CONF.colorize:
-        return string
-    return "\033[0;{color}m{string}\033[0;m".format(string=string,
-                                                    color=colors.setdefault(
-                                                        color, 0))
+    return (
+        "\033[0;{color}m{string}\033[0;m".format(
+            string=string, color=colors.setdefault(color, 0)
+        )
+        if CONF.colorize
+        else string
+    )
 
 
 def colorize_by_percent(amount, total, high=0.5, medium=0):
